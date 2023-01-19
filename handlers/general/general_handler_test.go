@@ -200,7 +200,8 @@ func TestHandler(t *testing.T) {
 				h    slog.Handler
 				want string
 			}{
-				{"json", opts.New(&buf, func(bs []byte) Formatter { return newJSONFormatter(bs) }), test.wantJSON},
+				{"text", opts.New(&buf, func() Formatter { return textFormatter{} }), test.wantText},
+				{"json", opts.New(&buf, func() Formatter { return newJSONFormatter() }), test.wantJSON},
 			} {
 				t.Run(handler.name, func(t *testing.T) {
 					h := handler.h
