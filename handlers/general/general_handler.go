@@ -39,8 +39,10 @@ type Options struct {
 	// Levels with lower levels are discarded.
 	// If nil, the Handler uses [slog.LevelInfo].
 	Level slog.Leveler
+
 	// ReplaceAttr rewrites Attrs.
-	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr // replace
+	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
+
 	// FrameAttrs returns the Attrs to use for source location.
 	// If nil, no source information is output.
 	FrameAttrs func(runtime.Frame) []slog.Attr
@@ -124,7 +126,7 @@ func (h *Handler) appendAttr(buf []byte, f Formatter, a slog.Attr, includeGroups
 	if h.opts.ReplaceAttr != nil {
 		a = h.opts.ReplaceAttr(groups, a)
 	}
-	if a.Key != "" {
+	if a.Key != "" || a.Value.Kind() == slog.KindGroup {
 		return f.AppendAttr(buf, a, groups)
 	}
 	return buf
@@ -184,7 +186,7 @@ func (f *jsonFormatter) AppendCloseGroup(buf []byte, name string) []byte {
 }
 
 func (f *jsonFormatter) AppendSeparatorIfNeeded(buf []byte) []byte {
-	if len(buf) > 0 && buf[len(buf)-1] != '{' {
+	if len(buf) > 0 && buf[len(buf)-1] != '{' && buf[len(buf)-1] != ',' {
 		return append(buf, ',')
 	}
 	return buf

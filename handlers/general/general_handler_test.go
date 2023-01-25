@@ -113,6 +113,13 @@ func TestHandler(t *testing.T) {
 			wantJSON: `{"msg":"message","g":{},"h":{"a":1}}`,
 		},
 		{
+			name:     "inline group",
+			replace:  removeKeys(slog.TimeKey, slog.LevelKey),
+			attrs:    []Attr{slog.Group("", slog.Int("a", 1), slog.Int("b", 2))},
+			wantText: "msg=message a=1 b=2",
+			wantJSON: `{"msg":"message","a":1,"b":2}`,
+		},
+		{
 			name:    "escapes",
 			replace: removeKeys(slog.TimeKey, slog.LevelKey),
 			attrs: []Attr{
