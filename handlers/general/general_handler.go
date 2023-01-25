@@ -18,6 +18,12 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// Handler implements a [slog.Handler] that can produce a variety of output
+// formats. It uses the [Formatter] interface to produce output.
+//
+// The main requirement of a format is that preformatted material--groups
+// and attributes that were added using WithGroup and WithAttrs--can be
+// concatenated between the built-in attributes and the remaining attributes.
 type Handler struct {
 	opts         Options
 	newFormatter func() Formatter
@@ -27,16 +33,25 @@ type Handler struct {
 	w            io.Writer
 }
 
+// Options are options for a [Handler].
 type Options struct {
-	Level       slog.Leveler
-	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
-	FrameAttrs  func(runtime.Frame) []slog.Attr
+	// Level reports the minimum level to log.
+	// Levels with lower levels are discarded.
+	// If nil, the Handler uses [slog.LevelInfo].
+	Level slog.Leveler
+	// ReplaceAttr rewrites Attrs.
+	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr // replace
+	// FrameAttrs returns the Attrs to use for source location.
+	// If nil, no source information is output.
+	FrameAttrs func(runtime.Frame) []slog.Attr
 }
 
+// New constructs a Handler with the default options.
 func New(w io.Writer, newFormatter func() Formatter) *Handler {
 	return Options{}.New(w, newFormatter)
 }
 
+// New constructs a Handler with the given options.
 func (opts Options) New(w io.Writer, newFormatter func() Formatter) *Handler {
 	return &Handler{
 		w:            w,
@@ -46,7 +61,11 @@ func (opts Options) New(w io.Writer, newFormatter func() Formatter) *Handler {
 }
 
 func (h *Handler) Enabled(level slog.Level) bool {
-	return level >= h.opts.Level.Level()
+	minLevel := slog.LevelInfo
+	if h.opts.Level != nil {
+		minLevel = h.opts.Level.Level()
+	}
+	return level >= minLevel
 }
 
 func (h *Handler) Handle(r slog.Record) error {
@@ -120,10 +139,13 @@ func (h *Handler) clone() *Handler {
 
 ////////////////////////////////////////////////////////////////
 
+// A Formatter formats log output.
+// Each Formatter method takes a []byte buffer, which it should
+// append to and then return.
 type Formatter interface {
 	// Append at the beginning of the log event.
 	AppendBegin([]byte) []byte
-	// Appendat the end of the log event
+	// Append at the end of the log event.
 	AppendEnd([]byte) []byte
 	// Append when a group with the given name starts.
 	AppendOpenGroup(buf []byte, name string) []byte
