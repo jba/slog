@@ -121,13 +121,18 @@ func (h *Handler) clone() *Handler {
 ////////////////////////////////////////////////////////////////
 
 type Formatter interface {
+	// Append at the beginning of the log event.
 	AppendBegin([]byte) []byte
-	AppendOpenGroup([]byte, string) []byte
-	AppendCloseGroup([]byte, string) []byte
-	AppendAttr([]byte, slog.Attr, []string) []byte
-	AppendSeparatorIfNeeded([]byte) []byte
-	//AppendPreformatted(dst, pre []byte, openGroups []string) []byte
+	// Appendat the end of the log event
 	AppendEnd([]byte) []byte
+	// Append when a group with the given name starts.
+	AppendOpenGroup(buf []byte, name string) []byte
+	// Append when a group with the given name ends.
+	AppendCloseGroup(buf []byte, name string) []byte
+	// Append an Attr in the context of the given groups.
+	AppendAttr(buf []byte, a slog.Attr, groups []string) []byte
+	// Append a separator between Attrs, if one is needed.
+	AppendSeparatorIfNeeded([]byte) []byte
 }
 
 ////////////////////////////////////////////////////////////////
@@ -212,65 +217,50 @@ func (f *jsonFormatter) AppendAttr(buf []byte, a slog.Attr, openGroups []string)
 ////////////////////////////////////////////////////////////////
 
 type indentingFormatter struct {
-	buf        []byte
-	indent     int
-	openGroups []string
+	indent int
 }
 
-// func NewIndentingFormatter(buf []byte) Formatter {
-// 	return &indentingFormatter{buf: buf, indent: 0}
-// }
+func (f *indentingFormatter) appendIndent(buf []byte) []byte {
+	return append(buf, strings.Repeat("  ", f.indent)...)
+}
 
-func (f *indentingFormatter) OpenGroup(name string) {
-	f.appendIndent()
-	f.buf = append(f.buf, name...)
-	f.buf = append(f.buf, ":\n"...)
+func (*indentingFormatter) AppendBegin(buf []byte) []byte { return buf }
+
+func (*indentingFormatter) AppendEnd(buf []byte) []byte { return buf }
+
+func (f *indentingFormatter) AppendOpenGroup(buf []byte, name string) []byte {
+	buf = f.appendIndent(buf)
 	f.indent++
+	buf = append(buf, name...)
+	return append(buf, ":\n"...)
 }
 
-func (f *indentingFormatter) CloseGroup() {
+func (f *indentingFormatter) AppendCloseGroup(buf []byte, name string) []byte {
 	f.indent--
+	return buf
 }
 
-func (f *indentingFormatter) GroupsOpen(names []string) {
-	f.openGroups = names
-}
+func (indentingFormatter) AppendSeparatorIfNeeded(buf []byte) []byte { return buf }
 
-func (f *indentingFormatter) CloseOpenGroups() {
-	for i := len(f.openGroups) - 1; i >= 0; i-- {
-		f.indent--
-		f.appendIndent()
-		f.buf = append(f.buf, "end "...)
-		f.buf = append(f.buf, f.openGroups[i]...)
-		f.buf = append(f.buf, '\n')
-	}
-	f.openGroups = nil
-}
-
-func (f *indentingFormatter) appendIndent() {
-	f.buf = append(f.buf, strings.Repeat("    ", f.indent)...)
-}
-
-func (f *indentingFormatter) Attr(a slog.Attr) {
+func (f *indentingFormatter) AppendAttr(buf []byte, a slog.Attr, openGroups []string) []byte {
 	if a.Value.Kind() == slog.KindGroup {
 		if a.Key != "" {
-			f.OpenGroup(a.Key)
+			buf = f.AppendOpenGroup(buf, a.Key)
 		}
 		for _, a2 := range a.Value.Group() {
-			f.Attr(a2)
+			buf = f.AppendAttr(buf, a2, openGroups)
 		}
 		if a.Key != "" {
-			f.CloseGroup()
+			buf = f.AppendCloseGroup(buf, a.Key)
 		}
+		return buf
 	} else {
-		f.appendIndent()
-		f.buf = fmt.Appendf(f.buf, "%s: %s\n", a.Key, a.Value)
+		buf = f.appendIndent(buf)
+		return fmt.Appendf(buf, "%s: %s\n", a.Key, a.Value)
 	}
 }
 
-func (f *indentingFormatter) Bytes() []byte {
-	return f.buf
-}
+////////////////////////////////////////////////////////////////
 
 func appendEscapedJSONString(buf []byte, s string) []byte {
 	char := func(b byte) { buf = append(buf, b) }
@@ -530,7 +520,6 @@ func appendTextValue(buf []byte, v slog.Value) []byte {
 			return buf
 		}
 		if bs, ok := byteSlice(v.Any()); ok {
-			// As of Go 1.19, this only allocates for strings longer than 32 bytes.
 			buf = append(buf, strconv.Quote(string(bs))...)
 			return buf
 		}
