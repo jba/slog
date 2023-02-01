@@ -71,7 +71,12 @@ func SpanName(ctx context.Context) string {
 		return ""
 	}
 	sl, ok := ctx.Value(spanListKey{}).(*spanList)
-	if !ok || len(sl.spans) == 0 {
+	if !ok {
+		return ""
+	}
+	sl.mu.Lock()
+	defer sl.mu.Unlock()
+	if len(sl.spans) == 0 {
 		return ""
 	}
 	return sl.spans[len(sl.spans)-1].Name()
