@@ -40,11 +40,23 @@ func (h *handler) Handle(r slog.Record) error {
 }
 
 func (h *handler) formatAttr(groups []string, a slog.Attr) {
-	key := a.Key
-	if len(groups) > 0 {
-		key = strings.Join(groups, ".") + "." + key
+	if a.Value.Kind() == slog.KindGroup {
+		gs := a.Value.Group()
+		if len(gs) == 0 {
+			return
+		}
+		if a.Key != "" {
+			groups = append(groups, a.Key)
+		}
+		for _, g := range gs {
+			h.formatAttr(groups, g)
+		}
+	} else if key := a.Key; key != "" {
+		if len(groups) > 0 {
+			key = strings.Join(groups, ".") + "." + key
+		}
+		fmt.Fprintf(h.w, " %s=%s", key, a.Value)
 	}
-	fmt.Fprintf(h.w, " %s=%s", key, a.Value)
 }
 
 func Test(t *testing.T) {
@@ -54,9 +66,9 @@ func Test(t *testing.T) {
 		WithGroup("G").
 		With("b", 2).
 		WithGroup("H").
-		Info("msg", "c", 3)
+		Info("msg", "c", 3, slog.Group("I", slog.Int("d", 4)), "e", 5)
 	got := buf.String()
-	want := `level=INFO msg="msg" a=1 G.b=2 G.H.c=3`
+	want := `level=INFO msg="msg" a=1 G.b=2 G.H.c=3 G.H.I.d=4 G.H.e=5`
 	if got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
