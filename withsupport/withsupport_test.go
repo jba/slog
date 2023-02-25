@@ -28,7 +28,7 @@ func (h *handler) WithAttrs(as []slog.Attr) slog.Handler {
 	return &handler{h.w, h.with.WithAttrs(as)}
 }
 
-func (h *handler) Handle(r slog.Record) error {
+func (h *handler) Handle(ctx context.Context, r slog.Record) error {
 	fmt.Fprintf(h.w, "level=%s", r.Level)
 	fmt.Fprintf(h.w, " msg=%q", r.Message)
 

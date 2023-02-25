@@ -57,3 +57,17 @@ func (g *GroupOrAttrs) Apply(f func(groups []string, a slog.Attr)) []string {
 
 	return groups
 }
+
+// Collect returns a slice of the GroupOrAttrs in reverse order.
+func (g *GroupOrAttrs) Collect() []*GroupOrAttrs {
+	n := 0
+	for ga := g; ga != nil; ga = ga.Next {
+		n++
+	}
+	res := make([]*GroupOrAttrs, n)
+	i := 0
+	for ga := g; ga != nil; ga = ga.Next {
+		res[len(res)-i-1] = ga
+	}
+	return res
+}
