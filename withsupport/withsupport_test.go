@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/exp/slog"
 )
 
@@ -71,5 +72,16 @@ func Test(t *testing.T) {
 	want := `level=INFO msg="msg" a=1 G.b=2 G.H.c=3 G.H.I.d=4 G.H.e=5`
 	if got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestCollect(t *testing.T) {
+	var g *GroupOrAttrs
+	g1 := g.WithGroup("x")
+	g2 := g1.WithAttrs([]slog.Attr{slog.Int("a", 1)})
+	got := g2.Collect()
+	want := []*GroupOrAttrs{g1, g2}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("-want, +got:\n%s", diff)
 	}
 }

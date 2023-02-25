@@ -68,6 +68,7 @@ func (g *GroupOrAttrs) Collect() []*GroupOrAttrs {
 	i := 0
 	for ga := g; ga != nil; ga = ga.Next {
 		res[len(res)-i-1] = ga
+		i++
 	}
 	return res
 }
