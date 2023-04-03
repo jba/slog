@@ -1,12 +1,12 @@
 package general
 
 import (
+	"context"
 	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,9 +43,9 @@ type Options struct {
 	// ReplaceAttr rewrites Attrs.
 	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 
-	// FrameAttrs returns the Attrs to use for source location.
+	// PCAttrs returns the Attrs to use for source location.
 	// If nil, no source information is output.
-	FrameAttrs func(runtime.Frame) []slog.Attr
+	PCAttrs func(pc uintptr) []slog.Attr
 }
 
 // New constructs a Handler with the default options.
@@ -62,7 +62,7 @@ func (opts Options) New(w io.Writer, newFormatter func() Formatter) *Handler {
 	}
 }
 
-func (h *Handler) Enabled(level slog.Level) bool {
+func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
 	minLevel := slog.LevelInfo
 	if h.opts.Level != nil {
 		minLevel = h.opts.Level.Level()
@@ -70,7 +70,7 @@ func (h *Handler) Enabled(level slog.Level) bool {
 	return level >= minLevel
 }
 
-func (h *Handler) Handle(r slog.Record) error {
+func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	buf := make([]byte, 0, 1024) // TODO: use a sync.Pool.
 	f := h.newFormatter()
 	buf = f.AppendBegin(buf)
@@ -79,8 +79,8 @@ func (h *Handler) Handle(r slog.Record) error {
 	}
 	buf = h.appendAttr(buf, f, slog.Any(slog.LevelKey, r.Level), false)
 	buf = h.appendAttr(buf, f, slog.String(slog.MessageKey, r.Message), false)
-	if h.opts.FrameAttrs != nil {
-		for _, a := range h.opts.FrameAttrs(r.Frame()) {
+	if h.opts.PCAttrs != nil {
+		for _, a := range h.opts.PCAttrs(r.PC) {
 			buf = h.appendAttr(buf, f, a, false)
 		}
 	}

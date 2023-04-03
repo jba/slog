@@ -38,8 +38,8 @@ func (h *simpleHandler) WithAttrs(as []slog.Attr) slog.Handler {
 	return &h2
 }
 
-func (h *simpleHandler) Handle(r slog.Record) error {
-	r2 := slog.NewRecord(r.Time, r.Level, r.Message, r.PC, r.Context)
+func (h *simpleHandler) Handle(ctx context.Context, r slog.Record) error {
+	r2 := slog.NewRecord(r.Time, r.Level, r.Message, r.PC)
 
 	var attrs []slog.Attr
 	r.Attrs(func(a slog.Attr) { attrs = append(attrs, a) })

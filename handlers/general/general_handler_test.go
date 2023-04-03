@@ -2,6 +2,7 @@ package general
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -197,7 +198,7 @@ func TestHandler(t *testing.T) {
 			wantJSON: `{"msg":"message","bs":1234}`,
 		},
 	} {
-		r := slog.NewRecord(testTime, slog.LevelInfo, "message", 1, nil)
+		r := slog.NewRecord(testTime, slog.LevelInfo, "message", 0)
 		r.AddAttrs(test.attrs...)
 		var buf bytes.Buffer
 		opts := Options{ReplaceAttr: test.replace}
@@ -216,7 +217,7 @@ func TestHandler(t *testing.T) {
 						h = test.with(h)
 					}
 					buf.Reset()
-					if err := h.Handle(r); err != nil {
+					if err := h.Handle(context.Background(), r); err != nil {
 						t.Fatal(err)
 					}
 					got := strings.TrimSuffix(buf.String(), "\n")

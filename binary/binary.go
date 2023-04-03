@@ -38,24 +38,24 @@ func (e *Encoder) EncodeKey(key string) {
 func (e *Encoder) EncodeValue(v slog.Value) {
 	v = v.Resolve()
 	switch v.Kind() {
-	case slog.StringKind:
+	case slog.KindString:
 		e.encodeString(v.String())
-	case slog.Int64Kind:
+	case slog.KindInt64:
 		e.encodeInt(v.Int64())
-	case slog.Uint64Kind:
+	case slog.KindUint64:
 		e.encodeUint(v.Uint64())
-	case slog.Float64Kind:
+	case slog.KindFloat64:
 		e.encodeFloat(v.Float64())
-	case slog.BoolKind:
+	case slog.KindBool:
 		e.encodeBool(v.Bool())
-	case slog.DurationKind:
+	case slog.KindDuration:
 		e.encodeOp(opDuration)
 		e.encodeInt(v.Duration().Nanoseconds())
-	case slog.TimeKind:
+	case slog.KindTime:
 		e.encodeTime(v.Time())
-	case slog.AnyKind:
+	case slog.KindAny:
 		e.encodeAny(v.Any())
-	case slog.GroupKind:
+	case slog.KindGroup:
 		attrs := v.Group()
 		e.encodeOp(opList)
 		e.encodeInt(int64(len(attrs) * 2))
@@ -64,7 +64,7 @@ func (e *Encoder) EncodeValue(v slog.Value) {
 			e.EncodeValue(a.Value)
 		}
 
-	case slog.LogValuerKind:
+	case slog.KindLogValuer:
 		panic("impossible")
 	default:
 		panic("unknown kind")
@@ -181,6 +181,7 @@ type DecodeVisitor interface {
 	String(key, val []byte)
 	Bytes(key, val []byte)
 	Bool(key []byte, val bool)
+	Float(key []byte, val float64)
 	Duration(key []byte, val time.Duration)
 	Time(key []byte, val time.Time)
 	Group(n int)
@@ -204,11 +205,11 @@ func Decode(r io.Reader, v DecodeVisitor) error {
 		} else {
 			switch op(b) {
 			case opInt:
-				i, n := Varint(buf)
+				i, n := binary.Varint(buf)
 				v.Int(key, i)
 				buf = buf[n:]
 			case opUint:
-				u, n := Uvarint(buf)
+				u, n := binary.Uvarint(buf)
 				v.Uint(key, u)
 				buf = buf[n:]
 			case opFloat:
@@ -221,9 +222,15 @@ func Decode(r io.Reader, v DecodeVisitor) error {
 				v.Bool(key, false)
 			case opString:
 				l, n := binary.Varint(buf)
+				buf = buf[n:]
+				v.String(key, buf[:l])
+				buf = buf[l:]
+			default:
+				panic(fmt.Sprintf("unknown op %v", op(b)))
 			}
 		}
 	}
+	return nil
 }
 
 // opBytes
