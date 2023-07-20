@@ -4,6 +4,7 @@
 package gokit
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -68,7 +69,7 @@ func (l *logger) Log(keyvals ...any) error {
 			sl = slog.LevelError
 		}
 	}
-	r := slog.NewRecord(time.Time{}, sl, message, 0, nil)
+	r := slog.NewRecord(time.Time{}, sl, message, 0)
 	r.AddAttrs(attrs...)
-	return l.h.Handle(r)
+	return l.h.Handle(context.Background(), r)
 }

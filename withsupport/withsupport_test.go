@@ -34,8 +34,9 @@ func (h *handler) Handle(ctx context.Context, r slog.Record) error {
 	fmt.Fprintf(h.w, " msg=%q", r.Message)
 
 	groups := h.with.Apply(h.formatAttr)
-	r.Attrs(func(a slog.Attr) {
+	r.Attrs(func(a slog.Attr) bool {
 		h.formatAttr(groups, a)
+		return true
 	})
 	return nil
 }

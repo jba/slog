@@ -81,8 +81,9 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 	}
 	buf = append(buf, r.Message...)
 	buf = append(buf, h.preformat...)
-	r.Attrs(func(a slog.Attr) {
+	r.Attrs(func(a slog.Attr) bool {
 		buf = h.appendAttr(buf, h.prefix, a)
+		return true
 	})
 
 	h.mu.Lock()

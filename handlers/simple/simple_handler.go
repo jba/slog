@@ -42,10 +42,14 @@ func (h *simpleHandler) Handle(ctx context.Context, r slog.Record) error {
 	r2 := slog.NewRecord(r.Time, r.Level, r.Message, r.PC)
 
 	var attrs []slog.Attr
-	r.Attrs(func(a slog.Attr) { attrs = append(attrs, a) })
+	r.Attrs(func(a slog.Attr) bool { attrs = append(attrs, a); return true })
 	for g := h.goa; g != nil; g = g.Next {
 		if g.Group != "" {
-			attrs = []slog.Attr{slog.Group(g.Group, attrs...)}
+			anys := make([]any, len(attrs))
+			for i, a := range attrs {
+				anys[i] = a
+			}
+			attrs = []slog.Attr{slog.Group(g.Group, anys...)}
 		} else {
 			attrs = append(slices.Clip(g.Attrs), attrs...)
 		}

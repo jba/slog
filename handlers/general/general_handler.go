@@ -88,8 +88,9 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		buf = f.AppendSeparatorIfNeeded(buf)
 		buf = append(buf, h.preformatted...)
 	}
-	r.Attrs(func(a slog.Attr) {
+	r.Attrs(func(a slog.Attr) bool {
 		buf = h.appendAttr(buf, f, a, true)
+		return true
 	})
 	for i := len(h.groups) - 1; i >= 0; i-- {
 		buf = f.AppendCloseGroup(buf, h.groups[i])

@@ -11,7 +11,7 @@ import (
 
 func Test(t *testing.T) {
 	var buf bytes.Buffer
-	h := slog.NewTextHandler(&buf)
+	h := slog.NewTextHandler(&buf, nil)
 	logger := New(h, "message")
 	logger = gklevel.NewInjector(logger, gklevel.WarnValue())
 	if err := logger.Log("message", "hello", "a", 1, "b", true); err != nil {

@@ -13,10 +13,11 @@ func newHandle(w io.Writer) func(slog.Record) error {
 	return func(r slog.Record) (err error) {
 		fmt.Fprintf(w, "level=%s", r.Level)
 		fmt.Fprintf(w, " msg=%q", r.Message)
-		r.Attrs(func(a slog.Attr) {
+		r.Attrs(func(a slog.Attr) bool {
 			if err == nil {
 				err = formatAttr(w, a)
 			}
+			return true
 		})
 		return err
 	}
