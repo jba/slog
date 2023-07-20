@@ -15,7 +15,7 @@ var testTime = time.Date(2023, time.April, 3, 1, 2, 3, 0, time.UTC)
 func TestOutput(t *testing.T) {
 	for _, test := range []struct {
 		name    string
-		handler func(w io.Writer) *Handler
+		handler func(io.Writer, *slog.HandlerOptions) *Handler
 		with    func(*slog.Logger) *slog.Logger
 		attrs   []slog.Attr
 		want    string
@@ -55,13 +55,15 @@ func TestOutput(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			h := test.handler(&buf)
+			h := test.handler(&buf, nil)
 			logger := slog.New(setTimeHandler{testTime, h})
 			if test.with != nil {
 				logger = test.with(logger)
 			}
 			logger.LogAttrs(context.Background(), slog.LevelInfo, "message", test.attrs...)
 			got := buf.String()
+			// remove final newline
+			got = got[:len(got)-1]
 			if got != test.want {
 				t.Errorf("\ngot  %s\nwant %s", got, test.want)
 			}

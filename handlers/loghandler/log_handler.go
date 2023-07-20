@@ -22,15 +22,15 @@ type Handler struct {
 	w  io.Writer
 }
 
-func New(w io.Writer) *Handler {
-	return NewWithOptions(w, slog.HandlerOptions{})
-}
-
-func NewWithOptions(w io.Writer, opts slog.HandlerOptions) *Handler {
-	if opts.ReplaceAttr == nil {
-		opts.ReplaceAttr = func(_ []string, a slog.Attr) slog.Attr { return a }
+func New(w io.Writer, opts *slog.HandlerOptions) *Handler {
+	h := &Handler{w: w}
+	if opts != nil {
+		h.opts = *opts
 	}
-	return &Handler{w: w, opts: opts}
+	if h.opts.ReplaceAttr == nil {
+		h.opts.ReplaceAttr = func(_ []string, a slog.Attr) slog.Attr { return a }
+	}
+	return h
 }
 
 func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
@@ -85,7 +85,7 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		buf = h.appendAttr(buf, h.prefix, a)
 		return true
 	})
-
+	buf = append(buf, '\n')
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	_, err := h.w.Write(buf)
