@@ -2,9 +2,8 @@ package trace
 
 import (
 	"context"
+	"log/slog"
 	"testing"
-
-	"golang.org/x/exp/slog"
 )
 
 func Test(t *testing.T) {

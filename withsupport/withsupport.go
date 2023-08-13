@@ -2,7 +2,7 @@
 // Handler.WithGroup.
 package withsupport
 
-import "golang.org/x/exp/slog"
+import "log/slog"
 
 // GroupOrAttrs holds either a group name or a list of slog.Attrs.
 type GroupOrAttrs struct {

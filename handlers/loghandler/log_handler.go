@@ -5,12 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 type Handler struct {

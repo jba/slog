@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"testing"
-
-	"golang.org/x/exp/slog"
 )
 
 func newHandle(w io.Writer) func(slog.Record) error {

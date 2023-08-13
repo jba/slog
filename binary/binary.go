@@ -7,11 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 type Encoder struct {

@@ -6,11 +6,11 @@ package gokit
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	gklog "github.com/go-kit/log"
 	gklevel "github.com/go-kit/log/level"
-	"golang.org/x/exp/slog"
 )
 
 // New returns go-kit logger that calls h.Handle.
