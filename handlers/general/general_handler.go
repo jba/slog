@@ -6,16 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 	"unicode/utf8"
-
-	"golang.org/x/exp/slices"
-	"golang.org/x/exp/slog"
 )
 
 // Handler implements a [slog.Handler] that can produce a variety of output

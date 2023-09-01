@@ -2,11 +2,11 @@ package gokit
 
 import (
 	"bytes"
+	"log/slog"
 	"strings"
 	"testing"
 
 	gklevel "github.com/go-kit/log/level"
-	"golang.org/x/exp/slog"
 )
 
 func Test(t *testing.T) {

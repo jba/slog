@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 type Attr = slog.Attr
@@ -111,7 +110,7 @@ func TestHandler(t *testing.T) {
 			replace:  removeKeys(slog.TimeKey, slog.LevelKey),
 			attrs:    []Attr{slog.Group("g"), slog.Group("h", slog.Int("a", 1))},
 			wantText: "msg=message h.a=1",
-			wantJSON: `{"msg":"message","g":{},"h":{"a":1}}`,
+			wantJSON: `{"msg":"message","h":{"a":1}}`,
 		},
 		{
 			name:     "inline group",

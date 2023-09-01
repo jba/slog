@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log/slog"
 	"testing"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 var testTime = time.Date(2023, time.April, 3, 1, 2, 3, 0, time.UTC)

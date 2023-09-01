@@ -2,8 +2,7 @@ package handlers
 
 import (
 	"io"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // BinaryHandler uses the format in github.com/jba/slog/binary

@@ -2,10 +2,10 @@ package simple
 
 import (
 	"context"
+	"log/slog"
+	"slices"
 
 	"github.com/jba/slog/withsupport"
-	"golang.org/x/exp/slices"
-	"golang.org/x/exp/slog"
 )
 
 func Handler(handle func(slog.Record) error, opts slog.HandlerOptions) slog.Handler {

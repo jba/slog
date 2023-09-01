@@ -6,7 +6,7 @@
 //	Level = INFO - verbosity
 package verbosity
 
-import "golang.org/x/exp/slog"
+import "log/slog"
 
 // ToLevel converts a verbosity to a Level.
 func ToLevel(verbosity int) slog.Level {
